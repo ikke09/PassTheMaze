@@ -16,17 +16,9 @@ function Cell(posX, posY, size){
     this.Walls = [new Wall(eWallSide.TOP), new Wall(eWallSide.RIGHT),new Wall(eWallSide.BOTTOM), new Wall(eWallSide.LEFT)];
     this.Visited = false;
     
-    this.draw = function(bitmapdata, color){
-        if(bitmapdata == undefined)
-            return;
+    this.getLinestoDraw = function(){
         
-        if(color == undefined || color == "")
-            color = "#ffffff";
-        
-        context = bitmapdata.context;
-        context.beginPath();
-        context.strokeStyle = color;
-        context.fillStyle = color;
+        var topLine, rightLine, bottomLine, leftLine;
         
         for(var w = 0; w<this.Walls.length;w++){
             
@@ -35,27 +27,20 @@ function Cell(posX, posY, size){
         
             if(this.Walls[w].Side == eWallSide.TOP)
             {
-                context.moveTo(this.Walls[w].X,this.Walls[w].Y);
-                context.lineTo(this.Walls[w].X + this.Walls[w].Size, this.Walls[w].Y);
-                context.stroke();
+                topLine = new Phaser.Line(this.Walls[w].X,this.Walls[w].Y,this.Walls[w].X + this.Walls[w].Size, this.Walls[w].Y)
             }else if(this.Walls[w].Side == eWallSide.RIGHT)
             {
-                context.moveTo(this.Walls[w].X + this.Walls[w].Size,this.Walls[w].Y);
-                context.lineTo(this.Walls[w].X, this.Walls[w].Y + this.Walls[w].Size);
-                context.stroke();
+                rightLine = new Phaser.Line(this.Walls[w].X + this.Walls[w].Size,this.Walls[w].Y,this.Walls[w].X, this.Walls[w].Y + this.Walls[w].Size);
             }else if(this.Walls[w].Side == eWallSide.BOTTOM)
             {
-                context.moveTo(this.Walls[w].X + this.Walls[w].Size,this.Walls[w].Y + this.Walls[w].Size);
-                context.lineTo(this.Walls[w].X, this.Walls[w].Y + this.Walls[w].Size);
-                context.stroke();
+                bottomLine = new Phaser.Line(this.Walls[w].X + this.Walls[w].Size,this.Walls[w].Y + this.Walls[w].Size, this.Walls[w].X, this.Walls[w].Y + this.Walls[w].Size);
             }else if(this.Walls[w].Side == eWallSide.LEFT)
             {
-                context.moveTo(this.Walls[w].X,this.Walls[w].Y + this.Walls[w].Size);
-                context.lineTo( this.Walls[w].X, this.Walls[w].Y);
-                context.stroke();
+                leftLine = new Phaser.Line(this.Walls[w].X,this.Walls[w].Y + this.Walls[w].Size, this.Walls[w].X, this.Walls[w].Y);
             }
         }
-        bitmapdata.render();
+        
+        return [topLine,rightLine,bottomLine,leftLine];
     }
 }
 
@@ -66,7 +51,7 @@ $(document).ready(function(){
     var screenWidth = $(window).width();
 
     //init Phaser GameObject
-    var game = new Phaser.Game(800,600, Phaser.AUTO, '', {preload: preload, create: create, render: render, update: update});
+    var game = new Phaser.Game(800,600, Phaser.CANVAS, '', {preload: preload, create: create, render: render, update: update});
     
     //size of cells
     var cellSize = 10;
@@ -106,11 +91,12 @@ $(document).ready(function(){
     }
     
     function render(){
-        bitmapData.clear();
         console.log("render");
         for(var i=0; i<grid.length;i++){
             for (var k=0;k<grid[0].length;k++){
-                grid[i][k].draw(bitmapData);
+                var lines = grid[i][k].getLinestoDraw();
+                for(var line = 0; line < lines.length; line++)
+                    game.debug.geom(lines[line]);
             }
         }
     }
