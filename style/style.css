@@ -1,7 +1,10 @@
 html {
+    width: 80%;
+    margin: 0 auto;
     background: #888;
 }
 
 #myCanvas{
+    
     border: 3px solid #fff;
 }
