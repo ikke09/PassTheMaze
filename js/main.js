@@ -19,59 +19,81 @@ function Cell(posX, posY, size){
     this.Size = size;
     this.Walls = [new Wall(eWallSide.TOP), new Wall(eWallSide.RIGHT),new Wall(eWallSide.BOTTOM), new Wall(eWallSide.LEFT)];
     this.Visited = false;
-}
-
-//draws the Cell to the Screen
-Cell.prototype.Render = function(cellColor, wallColor){
     
-    if(cellColor == undefined || cellColor === "")
-        cellColor = "#000";
-    
-    if(wallColor == undefined || wallColor === "")
-        wallColor = "#fff";
-    
-    //Draw inner Cell body
-    drawRect(this.X,this.Y,this.Size,cellColor);
-    
-    //draw all walls
-    for(var i=0;i<this.Walls.length;i++)
-    {
-        if(this.Walls[i] == undefined)
-            continue;
+    this.Render = function(){
+        var cellColor;
+        if(this.Visited)
+            cellColor = "#075F11";
+        else 
+            cellColor = "#000000";
+        //Draw inner Cell body
+        drawRect(this.X,this.Y,this.Size,cellColor);
         
-        switch(this.Walls[i].Side){
-            case eWallSide.TOP:
-                drawLine(this.X,this.Y,this.X + this.Size, this.Y,wallColor);
-                break;
-            case eWallSide.RIGHT:
-                drawLine(this.X + this.Size ,this.Y,this.X + this.Size, this.Y + this.Size,wallColor);
-                break;
-            case eWallSide.BOTTOM:
-                drawLine(this.X + this.Size ,this.Y + this.Size,this.X, this.Y + this.Size, wallColor);
-                break;
-            case eWallSide.LEFT:
-                drawLine(this.X,this.Y+ this.Size,this.X, this.Y, wallColor);
-                break;
+        //draw all walls
+        for(var i=0;i<this.Walls.length;i++)
+        {
+            if(this.Walls[i] == undefined)
+                continue;
+            
+            switch(this.Walls[i].Side){
+                case eWallSide.TOP:
+                    drawLine(this.X,this.Y,this.X + this.Size, this.Y,"white");
+                    break;
+                case eWallSide.RIGHT:
+                    drawLine(this.X + this.Size ,this.Y,this.X + this.Size, this.Y + this.Size,"white");
+                    break;
+                case eWallSide.BOTTOM:
+                    drawLine(this.X + this.Size ,this.Y + this.Size,this.X, this.Y + this.Size, "white");
+                    break;
+                case eWallSide.LEFT:
+                    drawLine(this.X,this.Y+ this.Size,this.X, this.Y, "white");
+                    break;
+            }
         }
+    }
+    
+    this.RemoveWall = function(wallSide){
+        if(wallSide == undefined)
+             return false;
+         
+         this.Walls.forEach(function(wall)
+         {
+             if(wall.Side == wallSide)
+             {
+                 this.Walls.splice(this.Walls.indexOf(wall),1);
+                 return true;
+             }
+         });
+         return false;
     }
 }
 
-//Removes the selected Wall from the Cell
-//returns true if a wall was removed
-Cell.prototype.RemoveWall = function(wallSide){
+function Grid(width, heigth, cellSize){
+    this.CellAmountX = Math.floor(width / cellSize);
+    this.CellAmountY = Math.floor(heigth / cellSize);
+    this.Cells = new Array(this.CellAmountX);
+    for(var x=0;x<this.Cells.length;x++){
+        this.Cells[x] = new Array(this.CellAmountY);
+    }
     
-    if(wallSide == undefined)
-        return false;
-    
-    this.Walls.forEach(function(wall)
-    {
-        if(wall.Side == wallSide)
-        {
-            this.Walls.splice(this.Walls.indexOf(wall),1);
-            return true;
+    this.FillGridWithCells = function(cellsize){
+        for(var x=0;x<this.CellAmountX;x++){
+            for(var y=0;y< this.CellAmountY;y++){
+                this.Cells[x][y] = new Cell(x * cellsize, y * cellsize, cellsize);
+            }
         }
-    });
-    return false;
+    }
+    
+    this.FillGridWithCells(cellSize);
+    
+    this.Render = function(){
+         for(var x=0;x<this.CellAmountX;x++){
+             for(var y=0;y< this.CellAmountY;y++){
+                 this.Cells[x][y].Render();
+             }
+        }
+    }
+    
 }
 
 //----Hilfsfunktionen
@@ -109,23 +131,8 @@ function init(){
 
     $("#myCanvas").attr({width: ""+canvasWidth, height: ""+canvasHeight});
     
-    //size of cells
-    cellsize = 19;
-    var cellAmountWidth = Math.floor(canvasWidth / cellsize);
-    var cellAmountHeigth = Math.floor(canvasHeight / cellsize);
-    
-    //create 2D grid Array
-    grid = new Array(cellAmountWidth);
-    for(var x=0;x<grid.length;x++){
-        grid[x] = new Array(cellAmountHeigth);
-    }
-    
-    //fill the grid with cells
-    for(var x=0;x<grid.length;x++){
-        for(var y=0;y< grid[0].length;y++){
-            grid[x][y] = new Cell(x * cellsize, y * cellsize, cellsize);
-        }
-    }
+    //create grid and fills it with cells
+    grid = new Grid(canvasWidth,canvasHeight, 16);
     
     //easeljs Stage initalisieren
     stage = new createjs.Stage("myCanvas");
@@ -138,16 +145,15 @@ function init(){
 }
 
 function handleTick(event){
-    //render the grid
+    
     if(event.paused)
         return;
     
-    console.log("FPS: "+createjs.Ticker.framerate);
-    for(var x=0;x<grid.length;x++){
-        for(var y=0;y< grid[0].length;y++){
-           grid[x][y].Render("blue","green");
-        }
-    }
+    var fps = createjs.Ticker.framerate;
+    $("#fps").html("FPS: "+fps);
+    
+    //render the grid
+    grid.Render();
     
     console.log("All Cells renderd");
     stage.update();
