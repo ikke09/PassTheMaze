@@ -1,6 +1,5 @@
 //Globale Variablen deklarieren
 var stage;
-var gfx;
 var grid;
 
 var eWallSide = {
@@ -25,22 +24,16 @@ function Cell(posX, posY, size){
 //draws the Cell to the Screen
 Cell.prototype.Render = function(cellColor, wallColor){
     
-    console.log("Render Cell");
-    
-    if(gfx == undefined)
-        gfx = new createjs.Graphics();
-    
     if(cellColor == undefined || cellColor === "")
         cellColor = "#000";
     
     if(wallColor == undefined || wallColor === "")
         wallColor = "#fff";
     
-    gfx.clear();
-    gfx.beginFill(cellColor).drawRect(this.X,this.Y,this.Size,this.Size);
-    gfx.endFill();
-    gfx.setStrokeStyle(1);
-    gfx.beginStroke(wallColor);
+    //Draw inner Cell body
+    drawRect(this.X,this.Y,this.Size,cellColor);
+    
+    //draw all walls
     for(var i=0;i<this.Walls.length;i++)
     {
         if(this.Walls[i] == undefined)
@@ -48,26 +41,19 @@ Cell.prototype.Render = function(cellColor, wallColor){
         
         switch(this.Walls[i].Side){
             case eWallSide.TOP:
-                gfx.moveTo(this.X,this.Y);
-                gfx.lineTo(this.X + this.Size, this.Y);
+                drawLine(this.X,this.Y,this.X + this.Size, this.Y,wallColor);
                 break;
             case eWallSide.RIGHT:
-                gfx.moveTo(this.X + this.Size,this.Y);
-                gfx.lineTo(this.X + this.Size, this.Y + this.Size);
+                drawLine(this.X + this.Size ,this.Y,this.X + this.Size, this.Y + this.Size,wallColor);
                 break;
             case eWallSide.BOTTOM:
-                gfx.moveTo(this.X + this.Size, this.Y + this.Size);
-                gfx.lineTo(this.X, this.Y + this.Size);
+                drawLine(this.X + this.Size ,this.Y + this.Size,this.X, this.Y + this.Size, wallColor);
                 break;
             case eWallSide.LEFT:
-                gfx.moveTo(this.X, this.Y + this.Size);
-                gfx.lineTo(this.X,this.Y);
+                drawLine(this.X,this.Y+ this.Size,this.X, this.Y, wallColor);
                 break;
         }
     }
-    gfx.endStroke();
-    var shape = new createjs.Shape(gfx);
-    stage.addChild(shape);
 }
 
 //Removes the selected Wall from the Cell
@@ -88,6 +74,33 @@ Cell.prototype.RemoveWall = function(wallSide){
     return false;
 }
 
+//----Hilfsfunktionen
+function drawLine(x1, y1, x2, y2, color){
+    var line = new createjs.Shape();
+    
+    line.graphics.setStrokeStyle(1);
+    if(color === "" || color == undefined)
+        color = "#ffffff";
+    
+    line.graphics.beginStroke(color);
+    line.graphics.moveTo(x1,y1);
+    line.graphics.lineTo(x2,y2);
+    
+    stage.addChild(line);
+}
+
+function drawRect(x,y,size,color){
+    var rect = new createjs.Shape();
+    if(color == undefined || color ==="")
+        color = "#000000";
+    
+    rect.graphics.beginFill(color);
+    rect.graphics.drawRect(x,y,size,size);
+    rect.graphics.endFill();
+    
+    stage.addChild(rect);
+}
+
 function init(){
     
     //Set size of the canvas to half of the webpage
@@ -97,7 +110,7 @@ function init(){
     $("#myCanvas").attr({width: ""+canvasWidth, height: ""+canvasHeight});
     
     //size of cells
-    cellsize = 10;
+    cellsize = 19;
     var cellAmountWidth = Math.floor(canvasWidth / cellsize);
     var cellAmountHeigth = Math.floor(canvasHeight / cellsize);
     
@@ -119,27 +132,34 @@ function init(){
     
     //Events registrieren
     createjs.Ticker.addEventListener("tick", handleTick);
-    createjs.Ticker.setFPS
+    createjs.Ticker.setFPS(10);
     stage.addEventListener("click", handleClick);
     stage.addEventListener("mouseMove", handleMouseMove);
 }
 
 function handleTick(event){
-    //fill the grid with cells
+    //render the grid
+    if(event.paused)
+        return;
+    
+    console.log("FPS: "+createjs.Ticker.framerate);
     for(var x=0;x<grid.length;x++){
         for(var y=0;y< grid[0].length;y++){
-            grid[x][y].Render("#0000ff","00ff00");
+           grid[x][y].Render("blue","green");
         }
     }
+    
+    console.log("All Cells renderd");
     stage.update();
+    stage.removeAllChildren();
 }
 
 function handleClick(event){
-    
+    console.log("Click");
 }
 
 function handleMouseMove(event){
-    
+    console.log("mouse move");
 }
 
 $(document).ready(function(){
