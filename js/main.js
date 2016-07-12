@@ -259,8 +259,10 @@ function handleTick(event){
     
     if(grid.HasUnvisitedCells()){
         MakeMaze();
+        $("#status").html("Labyrinth generieren...");
     }else{
-      alert("Maze finished");
+       $("#status").html("Labyrinth geniert");
+        createjs.Ticker.paused = true;
     }
     
     grid.Render();
