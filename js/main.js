@@ -1,6 +1,9 @@
 //Globale Variablen deklarieren
 var stage;
 var grid;
+var cellStack = new Array();
+var currentCell;
+  
 
 var eWallSide = {
     TOP : {value: 0, name: "Top", direction: "north"},
@@ -22,7 +25,10 @@ function Cell(posX, posY, size){
     
     this.Render = function(){
         var cellColor;
-        if(this.Visited)
+        
+        if(this === currentCell)
+            cellColor = "#1055fa";
+        else if(this.Visited)
             cellColor = "#075F11";
         else 
             cellColor = "#000000";
@@ -56,14 +62,14 @@ function Cell(posX, posY, size){
         if(wallSide == undefined)
              return false;
          
-         this.Walls.forEach(function(wall)
+         for(var i=0;i<this.Walls.length;i++)
          {
-             if(wall.Side == wallSide)
+             if(this.Walls[i].Side == wallSide)
              {
-                 this.Walls.splice(this.Walls.indexOf(wall),1);
+                 this.Walls.splice(i,1);
                  return true;
              }
-         });
+         }
          return false;
     }
 }
@@ -92,6 +98,56 @@ function Grid(width, heigth, cellSize){
                  this.Cells[x][y].Render();
              }
         }
+    }
+    
+    this.StartCell = undefined;
+    
+    this.SetStartCell = function(cell)
+    {
+        cell.Visited = true;
+        this.StartCell = cell;
+    }
+    
+    this.HasUnvisitedCells = function(){
+        for(var x=0;x<this.CellAmountX;x++){
+            for(var y=0;y<this.CellAmountY;y++){
+                if(!this.Cells[x][y].Visited){
+                    return true;  
+                }
+            }
+        }
+        return false;
+    }
+    
+    this.GetUnvisitedNeighboursOfCell = function(cell){
+        if(!cell)
+            return;
+        
+        var locationX = cell.X / cell.Size;
+        var locationY = cell.Y / cell.Size;
+        var neighbours = new Array();
+        
+        /*
+        var topCell = grid.Cells[locationX][locationY-1];
+        var rightCell = grid.Cells[locationX+1][locationY];
+        var bottomCell = grid.Cells[locationX][locationY+1];
+        var leftCell = grid.Cells[locationX-1][locationY];
+        */
+        
+        if(locationY-1 >= 0 && !grid.Cells[locationX][locationY-1].Visited)
+            neighbours.push(grid.Cells[locationX][locationY-1]);
+        
+        if(locationX+1 < this.CellAmountX && !grid.Cells[locationX+1][locationY].Visited)
+            neighbours.push(grid.Cells[locationX+1][locationY]);
+        
+        if(locationY + 1 < this.CellAmountY && !grid.Cells[locationX][locationY+1].Visited)
+            neighbours.push(grid.Cells[locationX][locationY+1]);
+        
+        if(locationX - 1 >= 0 && !grid.Cells[locationX-1][locationY].Visited)
+            neighbours.push(grid.Cells[locationX-1][locationY]);
+        
+        
+        return neighbours;
     }
     
 }
@@ -132,16 +188,65 @@ function init(){
     $("#myCanvas").attr({width: ""+canvasWidth, height: ""+canvasHeight});
     
     //create grid and fills it with cells
-    grid = new Grid(canvasWidth,canvasHeight, 16);
+    grid = new Grid(canvasWidth,canvasHeight, 48);
     
+    currentCell = grid.Cells[0][Math.floor(Math.random() * grid.CellAmountY)];
+    grid.SetStartCell(currentCell);
+
     //easeljs Stage initalisieren
     stage = new createjs.Stage("myCanvas");
     
+    //Create Maze
+    MakeMaze();
+    
     //Events registrieren
     createjs.Ticker.addEventListener("tick", handleTick);
-    createjs.Ticker.setFPS(10);
-    stage.addEventListener("click", handleClick);
-    stage.addEventListener("mouseMove", handleMouseMove);
+    createjs.Ticker.setFPS(60);
+    //stage.addEventListener("click", handleClick);
+    //stage.addEventListener("mouseMove", handleMouseMove);
+    
+    
+}
+
+function MakeMaze(){
+    //Make the Maze
+    
+    
+        
+        var neighboursOfCurrentCell = grid.GetUnvisitedNeighboursOfCell(currentCell);
+        var allNeighboursVisited = neighboursOfCurrentCell.length == 0;
+        
+        if(!allNeighboursVisited)
+        {
+            var nextCell = neighboursOfCurrentCell[Math.floor(Math.random() * neighboursOfCurrentCell.length)];
+            cellStack.push(currentCell);
+            var deltaX = currentCell.X - nextCell.X;
+            var deltaY = currentCell.Y - nextCell.Y;
+            
+            //Remove Walls
+            if(deltaX == currentCell.Size){
+                currentCell.RemoveWall(eWallSide.LEFT);
+                nextCell.RemoveWall(eWallSide.RIGHT);
+            }else if(deltaX == -currentCell.Size){
+                currentCell.RemoveWall(eWallSide.RIGHT);
+                nextCell.RemoveWall(eWallSide.LEFT);
+            }
+            
+            if(deltaY == currentCell.Size){
+                currentCell.RemoveWall(eWallSide.TOP);
+                nextCell.RemoveWall(eWallSide.BOTTOM);
+            }else if(deltaY == -currentCell.Size){
+                currentCell.RemoveWall(eWallSide.BOTTOM);
+                nextCell.RemoveWall(eWallSide.TOP);
+            }
+            
+            currentCell = nextCell;
+            currentCell.Visited = true;
+        }else if(cellStack.length > 0)
+        {
+            var nextCell = cellStack.pop();
+            currentCell = nextCell;
+        }
 }
 
 function handleTick(event){
@@ -149,13 +254,16 @@ function handleTick(event){
     if(event.paused)
         return;
     
-    var fps = createjs.Ticker.framerate;
+    var fps = createjs.Ticker.getMeasuredFPS();
     $("#fps").html("FPS: "+fps);
     
-    //render the grid
-    grid.Render();
+    if(grid.HasUnvisitedCells()){
+        MakeMaze();
+    }else{
+      alert("Maze finished");
+    }
     
-    console.log("All Cells renderd");
+    grid.Render();
     stage.update();
     stage.removeAllChildren();
 }
