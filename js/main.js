@@ -28,7 +28,7 @@ function Cell(posX, posY, size){
         
         if(this === currentCell)
             cellColor = "#1055fa";
-        else if(this.Visited)
+        else if(this === grid.StartCell || this === grid.EndCell)
             cellColor = "#075F11";
         else 
             cellColor = "#000000";
@@ -101,12 +101,7 @@ function Grid(width, heigth, cellSize){
     }
     
     this.StartCell = undefined;
-    
-    this.SetStartCell = function(cell)
-    {
-        cell.Visited = true;
-        this.StartCell = cell;
-    }
+    this.EndCell = undefined;
     
     this.HasUnvisitedCells = function(){
         for(var x=0;x<this.CellAmountX;x++){
@@ -190,14 +185,11 @@ function init(){
     //create grid and fills it with cells
     grid = new Grid(canvasWidth,canvasHeight, 48);
     
-    currentCell = grid.Cells[0][Math.floor(Math.random() * grid.CellAmountY)];
-    grid.SetStartCell(currentCell);
+    //random start and end cell
+    CreateStartAndEnd();
 
     //easeljs Stage initalisieren
     stage = new createjs.Stage("myCanvas");
-    
-    //Create Maze
-    MakeMaze();
     
     //Events registrieren
     createjs.Ticker.addEventListener("tick", handleTick);
@@ -208,45 +200,58 @@ function init(){
     
 }
 
+function FinalizeMaze(){
+    //removes wall for start and end
+    grid.StartCell.RemoveWall(eWallSide.LEFT);
+    grid.EndCell.RemoveWall(eWallSide.RIGHT);
+}
+
+function CreateStartAndEnd(){
+    grid.StartCell = grid.Cells[0][Math.floor(Math.random() * grid.CellAmountY)];
+    grid.EndCell = grid.Cells[grid.CellAmountX-1][Math.floor(Math.random() * grid.CellAmountY)];
+}
+
 function MakeMaze(){
-    //Make the Maze
     
+    //at first start, set currentCell to startCell
+    if(currentCell == undefined){
+        currentCell = grid.StartCell;
+    }
+
+    var neighboursOfCurrentCell = grid.GetUnvisitedNeighboursOfCell(currentCell);
+    var allNeighboursVisited = neighboursOfCurrentCell.length == 0;
     
+    if(!allNeighboursVisited)
+    {
+        var nextCell = neighboursOfCurrentCell[Math.floor(Math.random() * neighboursOfCurrentCell.length)];
+        cellStack.push(currentCell);
+        var deltaX = currentCell.X - nextCell.X;
+        var deltaY = currentCell.Y - nextCell.Y;
         
-        var neighboursOfCurrentCell = grid.GetUnvisitedNeighboursOfCell(currentCell);
-        var allNeighboursVisited = neighboursOfCurrentCell.length == 0;
-        
-        if(!allNeighboursVisited)
-        {
-            var nextCell = neighboursOfCurrentCell[Math.floor(Math.random() * neighboursOfCurrentCell.length)];
-            cellStack.push(currentCell);
-            var deltaX = currentCell.X - nextCell.X;
-            var deltaY = currentCell.Y - nextCell.Y;
-            
-            //Remove Walls
-            if(deltaX == currentCell.Size){
-                currentCell.RemoveWall(eWallSide.LEFT);
-                nextCell.RemoveWall(eWallSide.RIGHT);
-            }else if(deltaX == -currentCell.Size){
-                currentCell.RemoveWall(eWallSide.RIGHT);
-                nextCell.RemoveWall(eWallSide.LEFT);
-            }
-            
-            if(deltaY == currentCell.Size){
-                currentCell.RemoveWall(eWallSide.TOP);
-                nextCell.RemoveWall(eWallSide.BOTTOM);
-            }else if(deltaY == -currentCell.Size){
-                currentCell.RemoveWall(eWallSide.BOTTOM);
-                nextCell.RemoveWall(eWallSide.TOP);
-            }
-            
-            currentCell = nextCell;
-            currentCell.Visited = true;
-        }else if(cellStack.length > 0)
-        {
-            var nextCell = cellStack.pop();
-            currentCell = nextCell;
+        //Remove Walls
+        if(deltaX == currentCell.Size){
+            currentCell.RemoveWall(eWallSide.LEFT);
+            nextCell.RemoveWall(eWallSide.RIGHT);
+        }else if(deltaX == -currentCell.Size){
+            currentCell.RemoveWall(eWallSide.RIGHT);
+            nextCell.RemoveWall(eWallSide.LEFT);
         }
+        
+        if(deltaY == currentCell.Size){
+            currentCell.RemoveWall(eWallSide.TOP);
+            nextCell.RemoveWall(eWallSide.BOTTOM);
+        }else if(deltaY == -currentCell.Size){
+            currentCell.RemoveWall(eWallSide.BOTTOM);
+            nextCell.RemoveWall(eWallSide.TOP);
+        }
+        
+        currentCell = nextCell;
+        currentCell.Visited = true;
+    }else if(cellStack.length > 0)
+    {
+        var nextCell = cellStack.pop();
+        currentCell = nextCell;
+    }
 }
 
 function handleTick(event){
@@ -262,7 +267,7 @@ function handleTick(event){
         $("#status").html("Labyrinth generieren...");
     }else{
        $("#status").html("Labyrinth geniert");
-        createjs.Ticker.paused = true;
+        FinalizeMaze();
     }
     
     grid.Render();
