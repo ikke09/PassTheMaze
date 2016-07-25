@@ -5,6 +5,8 @@ var cellSize = 48;
 var cellStack = new Array();
 var canvasWidth;
 var canvasHeight;
+var mazeFinished = false;
+var score;
 
 //----Hilfsfunktionen
 function drawLine(x1, y1, x2, y2, color){
@@ -14,6 +16,7 @@ function drawLine(x1, y1, x2, y2, color){
     if(color === "" || color == undefined)
         color = "#ffffff";
     
+    line.graphics.setStrokeStyle(3);
     line.graphics.beginStroke(color);
     line.graphics.moveTo(x1,y1);
     line.graphics.lineTo(x2,y2);
@@ -26,6 +29,7 @@ function drawRect(x,y,size,color){
     if(color == undefined || color ==="")
         color = "#000000";
     
+    rect.graphics.setStrokeStyle(0);
     rect.graphics.beginFill(color);
     rect.graphics.drawRect(x,y,size,size);
     rect.graphics.endFill();
@@ -50,9 +54,6 @@ function init(){
     //easeljs Stage initalisieren
     stage = new createjs.Stage("myCanvas");
     createjs.Touch.enable(stage);
-    
-    
-    
 }
 
 function Start(){
@@ -61,7 +62,7 @@ function Start(){
     document.onkeydown = handleKeyDown;
     //stage.addEventListener('keydown', handleKeyDown);
     createjs.Ticker.addEventListener("tick", handleTick);
-    createjs.Ticker.setFPS(20);
+    createjs.Ticker.setFPS(60);
 }
 
 function FinalizeMaze(){
@@ -123,31 +124,42 @@ function handleTick(event){
     if(event.paused)
         return;
     
-    var fps = createjs.Ticker.getMeasuredFPS();
+    var fps = Math.round(createjs.Ticker.getMeasuredFPS());
     $("#fps").html("FPS: "+fps);
     
-    if(grid.HasUnvisitedCells()){
+    //Labyrinth erzeugen
+    while(!mazeFinished){
         MakeMaze();
         $("#status").html("Labyrinth generieren...");
-    }else{
-    $("#status").html("Labyrinth geniert");
-    FinalizeMaze();
-    grid.CurrentCell = grid.StartCell;
+        
+        if(!grid.HasUnvisitedCells()){
+            mazeFinished = true;
+            $("#status").html("Labyrinth geniert");
+            FinalizeMaze();
+            grid.CurrentCell = grid.StartCell;
+            score = new Score();
+        }
     }
     
-    //if(grid.CurrentCell === grid.EndCell){
-      //  prompt("Well Done!");
-    //    event.paused = true;
-    //}
+    //Render und updaten
     grid.Render();
     stage.update();
     stage.removeAllChildren();
+    
+    //Spieler hat Ziel erreicht
+    if(grid.CurrentCell === grid.EndCell){
+        score.EndTime = new Date();
+        score.ShowResult();
+        createjs.Ticker.paused = true;
+    }
+    
+   
 }
 
 function stageClicked(event)
 {
-    if(grid.HasUnvisitedCells())
-        return; 
+    if(!mazeFinished)
+        return;
     
     var mouseLocationOnGridX = Math.floor(event.stageX / cellSize);
     var mouseLocationOnGridY = Math.floor(event.stageY / cellSize);
@@ -161,42 +173,53 @@ function stageClicked(event)
 
 //KEYCODES
 /*
-UP = 38
-DOWN = 40
-LEFT = 37
-RIGHT = 39
+UP = 38 || W = 87
+DOWN = 40 || S = 83
+LEFT = 37 || A = 65
+RIGHT = 39 || D = 68
 */
 
 function handleKeyDown(event){
+    if(!mazeFinished)
+        return;
+    
     var currentGridPosX = Math.floor(grid.CurrentCell.X / cellSize);
     var currentGridPosY = Math.floor(grid.CurrentCell.Y / cellSize);
     switch(event.keyCode){
+        case 83: //DOWN
         case 40:
             var nextGridPosY = currentGridPosY + 1;
             if(nextGridPosY < grid.CellAmountY && !grid.CurrentCell.HasWall(eWallSide.BOTTOM)){
                 grid.CurrentCell.Choosen = true;
                 grid.CurrentCell = grid.Cells[currentGridPosX][nextGridPosY];
+                score.IncreaseMoveCounter();
             }
             break;
+        case 87: //UP
         case 38:
             var nextGridPosY = currentGridPosY - 1;
             if(nextGridPosY >= 0 && !grid.CurrentCell.HasWall(eWallSide.TOP)){
                 grid.CurrentCell.Choosen = true;
                 grid.CurrentCell = grid.Cells[currentGridPosX][nextGridPosY];
+                score.IncreaseMoveCounter();
             }
             break;
+        case 68: //LEFT
         case 39:
             var nextGridPosX = currentGridPosX + 1;
             if(nextGridPosX < grid.CellAmountX && !grid.CurrentCell.HasWall(eWallSide.RIGHT)){
                 grid.CurrentCell.Choosen = true;
                 grid.CurrentCell = grid.Cells[nextGridPosX][currentGridPosY];
+                score.IncreaseMoveCounter();
             }
             break;
+        case 65: //RIGHT
         case 37:
             var nextGridPosX = currentGridPosX - 1;
             if(nextGridPosX >= 0 && !grid.CurrentCell.HasWall(eWallSide.LEFT)){
                 grid.CurrentCell.Choosen = true;
                 grid.CurrentCell = grid.Cells[nextGridPosX][currentGridPosY];
+                score.IncreaseMoveCounter();
             }
             break;
     }

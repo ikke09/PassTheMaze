@@ -12,8 +12,8 @@ function Cell(posX, posY, size)
         
         if(this === grid.CurrentCell)
             cellColor = "#1055fa";
-        else if(this === grid.StartCell || this === grid.EndCell)
-            cellColor = "#075F11";
+        //else if(this === grid.StartCell || this === grid.EndCell)
+          //  cellColor = "#075F11";
         else if(this.Choosen)
             cellColor = "#F52530";
         else 
