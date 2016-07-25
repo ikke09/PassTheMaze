@@ -27,6 +27,7 @@ function Grid(width, heigth, cellSize)
     
     this.StartCell = undefined;
     this.EndCell = undefined;
+    this.CurrentCell = undefined;
     
     this.HasUnvisitedCells = function(){
         for(var x=0;x<this.CellAmountX;x++){
