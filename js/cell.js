@@ -5,14 +5,17 @@ function Cell(posX, posY, size)
     this.Size = size;
     this.Walls = [new Wall(eWallSide.TOP), new Wall(eWallSide.RIGHT),new Wall(eWallSide.BOTTOM), new Wall(eWallSide.LEFT)];
     this.Visited = false;
+    this.Choosen = false;
     
     this.Render = function(){
         var cellColor;
         
-        if(this === currentCell)
+        if(this === grid.CurrentCell)
             cellColor = "#1055fa";
         else if(this === grid.StartCell || this === grid.EndCell)
             cellColor = "#075F11";
+        else if(this.Choosen)
+            cellColor = "#F52530";
         else 
             cellColor = "#000000";
         //Draw inner Cell body
@@ -54,5 +57,13 @@ function Cell(posX, posY, size)
              }
          }
          return false;
+    }
+    
+    this.HasWall = function(wallSide){
+        for(var i=0;i<this.Walls.length;i++){
+            if(this.Walls[i].Side === wallSide)
+                return true;
+        }
+        return false;
     }
 }
