@@ -7,6 +7,7 @@ var canvasWidth;
 var canvasHeight;
 var mazeFinished = false;
 var score;
+var choosenCell;
 
 //----Hilfsfunktionen
 function drawLine(x1, y1, x2, y2, color){
@@ -58,11 +59,13 @@ function init(){
 
 function Start(){
     //Events registrieren
-    stage.addEventListener('stagemousedown', stageClicked);
+    //stage.addEventListener('stagemousedown', startDrag);
     document.onkeydown = handleKeyDown;
     //stage.addEventListener('keydown', handleKeyDown);
     createjs.Ticker.addEventListener("tick", handleTick);
     createjs.Ticker.setFPS(60);
+    
+    grid.CurrentCell.addEventListener("pressmove", handlePressedMove);
 }
 
 function FinalizeMaze(){
@@ -72,7 +75,7 @@ function FinalizeMaze(){
 }
 
 function CreateStartAndEnd(){
-    grid.StartCell = grid.Cells[0][Math.floor(Math.random() * grid.CellAmountY)];
+    grid.StartCell = grid.CurrentCell = grid.Cells[0][Math.floor(Math.random() * grid.CellAmountY)];
     grid.EndCell = grid.Cells[grid.CellAmountX-1][Math.floor(Math.random() * grid.CellAmountY)];
 }
 
@@ -156,19 +159,28 @@ function handleTick(event){
    
 }
 
-function stageClicked(event)
+function startDrag(event)
 {
+    console.log("Click on Choosen Cell");
+}
+
+function handlePressedMove(event){
+    
+    console.log("pressmove");
+    
     if(!mazeFinished)
         return;
     
-    var mouseLocationOnGridX = Math.floor(event.stageX / cellSize);
-    var mouseLocationOnGridY = Math.floor(event.stageY / cellSize);
+    var mouseLocationOnGridX = Math.floor(stage.mouseX / cellSize);
+    var mouseLocationOnGridY = Math.floor(stage.mouseY / cellSize);
     
-    if(grid.Cells[mouseLocationOnGridX][mouseLocationOnGridY])
-    {
-        grid.Cells[mouseLocationOnGridX][mouseLocationOnGridY].Choosen = true;
-        grid.Render();    
-    }
+    choosenCell = grid.Cells[mouseLocationOnGridX][mouseLocationOnGridY];
+    console.log("ChoosenCell" + choosenCell);
+    if(choosenCell != grid.CurrentCell || !choosenCell)
+        return;
+    
+    choosenCell.X = Math.floor(stage.mouseX / cellSize);
+    choosenCell.Y = Math.floor(stage.mouseY / cellSize);
 }
 
 //KEYCODES

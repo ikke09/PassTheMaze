@@ -20,7 +20,7 @@ function Grid(width, heigth, cellSize)
     this.Render = function(){
          for(var x=0;x<this.CellAmountX;x++){
              for(var y=0;y< this.CellAmountY;y++){
-                 this.Cells[x][y].Render();
+                 this.Cells[x][y].draw();
              }
         }
     }
