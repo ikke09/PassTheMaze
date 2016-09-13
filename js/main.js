@@ -8,6 +8,7 @@ var canvasHeight;
 var mazeFinished = false;
 var score;
 var choosenCell;
+var paint;
 
 //----Hilfsfunktionen
 function drawLine(x1, y1, x2, y2, color){
@@ -55,17 +56,21 @@ function init(){
     //easeljs Stage initalisieren
     stage = new createjs.Stage("myCanvas");
     createjs.Touch.enable(stage);
+    
+    paint = false;
 }
 
 function Start(){
     //Events registrieren
-    //stage.addEventListener('stagemousedown', startDrag);
-    document.onkeydown = handleKeyDown;
+    stage.addEventListener('stagemousedown', startDrawing);
+    stage.addEventListener('stagemouseup', stopDrawing);
+    stage.addEventListener('stagemousemove', drawing);
+    //document.onkeydown = handleKeyDown;
     //stage.addEventListener('keydown', handleKeyDown);
     createjs.Ticker.addEventListener("tick", handleTick);
     createjs.Ticker.setFPS(60);
-    
-    grid.CurrentCell.addEventListener("pressmove", handlePressedMove);
+
+    //grid.CurrentCell.addEventListener("pressmove", handlePressedMove);
 }
 
 function FinalizeMaze(){
@@ -134,7 +139,7 @@ function handleTick(event){
     while(!mazeFinished){
         MakeMaze();
         $("#status").html("Labyrinth generieren...");
-        
+
         if(!grid.HasUnvisitedCells()){
             mazeFinished = true;
             $("#status").html("Labyrinth geniert");
@@ -148,39 +153,125 @@ function handleTick(event){
     grid.Render();
     stage.update();
     stage.removeAllChildren();
-    
+
     //Spieler hat Ziel erreicht
     if(grid.CurrentCell === grid.EndCell){
         score.EndTime = new Date();
         score.ShowResult();
         createjs.Ticker.paused = true;
     }
-    
-   
+
+
 }
 
-function startDrag(event)
+function startDrawing(event)
 {
-    console.log("Click on Choosen Cell");
+    console.log("Start Drawing...");
+
+    if(!mazeFinished)
+        return;
+
+    var mouseLocationOnGridX = Math.floor(stage.mouseX / cellSize);
+    var mouseLocationOnGridY = Math.floor(stage.mouseY / cellSize);
+
+    choosenCell = grid.Cells[mouseLocationOnGridX][mouseLocationOnGridY];
+    if(choosenCell && choosenCell === grid.CurrentCell)
+    {
+        paint = true;
+    }else{
+        paint = false;
+    }
+}
+
+function stopDrawing(event)
+{
+    console.log("Stop Drawing!");
+    paint = false;
+}
+
+function drawing(event)
+{
+    if(!paint)
+        return;
+
+    console.log("Drawing...");
+
+    var nextGridPosX = Math.floor(stage.mouseX / cellSize);
+    var nextGridPosY = Math.floor(stage.mouseY / cellSize);
+
+    choosenCell = grid.Cells[nextGridPosX][nextGridPosY];
+    if(choosenCell === grid.CurrentCell || !choosenCell)
+        return;
+
+    var deltaX = grid.CurrentCell.X - choosenCell.X;
+    var deltaY = grid.CurrentCell.Y - choosenCell.Y;
+
+    if((deltaX == cellSize && deltaY == cellSize) ||
+       (deltaX == -cellSize && deltaY == -cellSize) ||
+       (deltaX == cellSize && deltaY == -cellSize)||
+       (deltaX == -cellSize && deltaY == cellSize))
+    {
+        //avoid diagonal jumps
+        return;
+    }
+
+    if((deltaX < -cellSize) ||
+       (deltaX > cellSize) ||
+       (deltaY < -cellSize) ||
+       (deltaY > cellSize))
+    {
+        //avoid jumps that are more than one cell
+        return;
+    }
+
+    if(deltaX == cellSize)
+    {
+        //Player wants to move to the left
+        if(nextGridPosX >= 0 && !grid.CurrentCell.HasWall(eWallSide.LEFT))
+        {
+            grid.CurrentCell.Choosen = true;
+            grid.CurrentCell = choosenCell;
+            score.IncreaseMoveCounter();
+        }
+
+    }else if(deltaX == -cellSize)
+    {
+        //Player wants to move to the right
+        if(nextGridPosX < grid.CellAmountX && !grid.CurrentCell.HasWall(eWallSide.RIGHT))
+        {
+            grid.CurrentCell.Choosen = true;
+            grid.CurrentCell = choosenCell;
+            score.IncreaseMoveCounter();
+        }
+    }
+
+    if(deltaY == cellSize)
+    {
+        //Player wants to move to the top
+        if(nextGridPosY >= 0 && !grid.CurrentCell.HasWall(eWallSide.TOP))
+        {
+            grid.CurrentCell.Choosen = true;
+            grid.CurrentCell = choosenCell;
+            score.IncreaseMoveCounter();
+        }
+
+    }else if(deltaY == -cellSize)
+    {
+        //Player wants to move to the bottom
+        if(nextGridPosY < grid.CellAmountY && !grid.CurrentCell.HasWall(eWallSide.BOTTOM))
+        {
+            grid.CurrentCell.Choosen = true;
+            grid.CurrentCell = choosenCell;
+            score.IncreaseMoveCounter();
+        }
+    }
 }
 
 function handlePressedMove(event){
-    
+
+
     console.log("pressmove");
-    
-    if(!mazeFinished)
-        return;
-    
-    var mouseLocationOnGridX = Math.floor(stage.mouseX / cellSize);
-    var mouseLocationOnGridY = Math.floor(stage.mouseY / cellSize);
-    
-    choosenCell = grid.Cells[mouseLocationOnGridX][mouseLocationOnGridY];
-    console.log("ChoosenCell" + choosenCell);
-    if(choosenCell != grid.CurrentCell || !choosenCell)
-        return;
-    
-    choosenCell.X = Math.floor(stage.mouseX / cellSize);
-    choosenCell.Y = Math.floor(stage.mouseY / cellSize);
+
 }
 
 //KEYCODES
@@ -194,7 +285,7 @@ RIGHT = 39 || D = 68
 function handleKeyDown(event){
     if(!mazeFinished)
         return;
-    
+
     var currentGridPosX = Math.floor(grid.CurrentCell.X / cellSize);
     var currentGridPosY = Math.floor(grid.CurrentCell.Y / cellSize);
     switch(event.keyCode){
@@ -235,7 +326,7 @@ function handleKeyDown(event){
             }
             break;
     }
-    
+
 }
 
 $(document).ready(function(){
