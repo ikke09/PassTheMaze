@@ -48,13 +48,6 @@ function Grid(width, heigth, cellSize)
         var locationY = cell.Y / cell.Size;
         var neighbours = new Array();
         
-        /*
-        var topCell = grid.Cells[locationX][locationY-1];
-        var rightCell = grid.Cells[locationX+1][locationY];
-        var bottomCell = grid.Cells[locationX][locationY+1];
-        var leftCell = grid.Cells[locationX-1][locationY];
-        */
-        
         if(locationY-1 >= 0 && !grid.Cells[locationX][locationY-1].Visited)
             neighbours.push(grid.Cells[locationX][locationY-1]);
         

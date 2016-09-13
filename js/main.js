@@ -10,34 +10,6 @@ var score;
 var choosenCell;
 var paint;
 
-//----Hilfsfunktionen
-function drawLine(x1, y1, x2, y2, color){
-    var line = new createjs.Shape();
-    
-    line.graphics.setStrokeStyle(1);
-    if(color === "" || color == undefined)
-        color = "#ffffff";
-    
-    line.graphics.setStrokeStyle(3);
-    line.graphics.beginStroke(color);
-    line.graphics.moveTo(x1,y1);
-    line.graphics.lineTo(x2,y2);
-    
-    stage.addChild(line);
-}
-
-function drawRect(x,y,size,color){
-    var rect = new createjs.Shape();
-    if(color == undefined || color ==="")
-        color = "#000000";
-    
-    rect.graphics.setStrokeStyle(0);
-    rect.graphics.beginFill(color);
-    rect.graphics.drawRect(x,y,size,size);
-    rect.graphics.endFill();
-    
-    stage.addChild(rect);
-}
 
 function init(){
     
@@ -159,11 +131,11 @@ function handleTick(event){
         score.EndTime = new Date();
         score.ShowResult();
         createjs.Ticker.paused = true;
+        stage.removeAllEventListeners();
     }
-
-
 }
 
+//------Events-
 function startDrawing(event)
 {
     console.log("Start Drawing...");
@@ -267,13 +239,6 @@ function drawing(event)
     }
 }
 
-function handlePressedMove(event){
-
-
-    console.log("pressmove");
-
-}
-
 //KEYCODES
 /*
 UP = 38 || W = 87
@@ -328,6 +293,36 @@ function handleKeyDown(event){
     }
 
 }
+
+//----Hilfsfunktionen
+function drawLine(x1, y1, x2, y2, color){
+    var line = new createjs.Shape();
+    
+    line.graphics.setStrokeStyle(1);
+    if(color === "" || color == undefined)
+        color = "#ffffff";
+    
+    line.graphics.setStrokeStyle(3);
+    line.graphics.beginStroke(color);
+    line.graphics.moveTo(x1,y1);
+    line.graphics.lineTo(x2,y2);
+    
+    stage.addChild(line);
+}
+
+function drawRect(x,y,size,color){
+    var rect = new createjs.Shape();
+    if(color == undefined || color ==="")
+        color = "#000000";
+    
+    rect.graphics.setStrokeStyle(0);
+    rect.graphics.beginFill(color);
+    rect.graphics.drawRect(x,y,size,size);
+    rect.graphics.endFill();
+    
+    stage.addChild(rect);
+}
+//------------------
 
 $(document).ready(function(){
     init();

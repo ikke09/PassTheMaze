@@ -1,30 +1,18 @@
-(function(){
-    function Cell(posX, posY, size)
-    {
-        this.X = posX;
-        this.Y = posY;
-        this.Size = size;
-        this.Walls = [new Wall(eWallSide.TOP), new Wall(eWallSide.RIGHT),new Wall(eWallSide.BOTTOM), new Wall(eWallSide.LEFT)];
-        this.Visited = false;
-        this.Choosen = false;
-        //this.Shape_constructor();
-    }
+function Cell(posX, posY, size)
+{
+    this.X = posX;
+    this.Y = posY;
+    this.Size = size;
+    this.Walls = [new Wall(eWallSide.TOP), new Wall(eWallSide.RIGHT),new Wall(eWallSide.BOTTOM), new Wall(eWallSide.LEFT)];
+    this.Visited = false;
+    this.Choosen = false;
     
-    Cell.prototype = Object.create(createjs.DisplayObject);
-    Cell.prototype.constructor = Cell;
-    
-    var c = createjs.extend(Cell,createjs.DisplayObject);
-    
-    c.draw = function()
-    {
-        this.DisplayObject_draw();
-        
+    this.draw = function()
+    {        
         var cellColor;
         
         if(this === grid.CurrentCell)
             cellColor = "#1055fa";
-        //else if(this === grid.StartCell || this === grid.EndCell)
-        //  cellColor = "#075F11";
         else if(this.Choosen)
             cellColor = "#F52530";
         else 
@@ -55,9 +43,7 @@
         }
     }
     
-    window.Cell = createjs.promote(Cell,"DisplayObject");
-      
-    Cell.prototype.RemoveWall = function(wallSide)
+    this.RemoveWall = function(wallSide)
     {
         if(wallSide == undefined)
             return false;
@@ -73,12 +59,13 @@
         return false;
     }
     
-    Cell.prototype.HasWall = function(wallSide)
+    this.HasWall = function(wallSide)
     {
         for(var i=0;i<this.Walls.length;i++){
             if(this.Walls[i].Side === wallSide)
                 return true;
         }
         return false;
+        
     }
-}());
+}
