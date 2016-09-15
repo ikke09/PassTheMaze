@@ -1,4 +1,4 @@
-function Score(){
+function Score(totalCells){
     this.MoveCounter = 0;
     this.StartTime = new Date();
     this.EndTime = undefined;
@@ -16,7 +16,8 @@ function Score(){
             var hours = Math.abs(this.EndTime.getHours() - this.StartTime.getHours());
             var minutes = Math.abs(this.EndTime.getMinutes() - this.StartTime.getMinutes());
             var seconds = Math.abs(this.EndTime.getSeconds() - this.StartTime.getSeconds());
-            score = score + hours + minutes + seconds;
+            score = (score + (1/2*(hours*4+minutes*2+seconds)))/totalCells;
+            score = Math.round(score * 1000);
             resultString += "\r\n Zeit: "+hours+" Stunden "+minutes +" Minuten "+seconds+" Sekunden ";
         }
         

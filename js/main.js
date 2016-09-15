@@ -10,7 +10,6 @@ var score;
 var choosenCell;
 var paint;
 
-
 function init(){
     
     //Set size of the canvas to half of the webpage
@@ -117,7 +116,7 @@ function handleTick(event){
             $("#status").html("Labyrinth geniert");
             FinalizeMaze();
             grid.CurrentCell = grid.StartCell;
-            score = new Score();
+            score = new Score(grid.CellAmountX * grid.CellAmountY);
         }
     }
     
